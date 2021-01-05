@@ -140,9 +140,9 @@ Inductive limbaj :=
 | whiledo : BExp -> limbaj -> limbaj
 | fordo : limbaj -> BExp -> limbaj -> limbaj -> limbaj
 | apointer : limbaj -> limbaj
-| areferinta : limbaj -> limbaj
+| areferinta : AExp -> AExp -> limbaj
 | switch : AExp -> limbaj-> limbaj
-|case : AExp->limbaj
+|case : AExp->AExp ->limbaj
 | break: limbaj
 |continue: limbaj.
 
@@ -154,10 +154,11 @@ Notation "'Iff' A 'Then' B" := (ifthen A B) (at level 85).
 Notation "'If' A 'Then' B 'Else' C" := (ifthenelse A B C) (at level 85).
 Notation "'While' '(' A ')' '(' B ')'" := (whiledo A B) (at level 85).
 Notation "'For' '(' A ; B ; C ')' '(' D ')'" := (fordo A B C D) (at level 85).
-Notation "'int' '&' A " := (areferinta A ) (at level 85, right associativity).
-Notation "'''*' A " := (apointer A ) (at level 85, right associativity).
+Notation "A '=' '&' C  " := (areferinta A C) (at level 85, right associativity).
+Notation "'bint''*' A " := (apointer A ) (at level 85, right associativity).
 Notation "'break'" := (break) (at level 85).
 Notation "'continue'" := (continue) (at level 85).
+Notation "'switch' '(' A ')' '{'  'case'  B ':' C  '}'" := (switch A case B C) (at level 85).
 
  
 Reserved Notation "S -{ Sigma }-> Sigma'" (at level 60).
@@ -208,11 +209,6 @@ Inductive eval : limbaj -> Env -> Env -> Prop :=
     fordo e1 e2 e3 s -{ sigma }-> sigma'
 where "s -{ sigma }-> sigma'" := (eval s sigma sigma').
 
-Hint Constructors aeval.
-Hint Constructors beval.
-Hint Constructors eval.
-
-
 
 Definition program :=
 (
@@ -224,28 +220,13 @@ Definition program :=
     "a" ::= ("a" +' 2)
   ) ;;
   declare* "i";;
+break;;
+continue;;
+
   For ("i" ::= 0 ; "i" <=' 1 ; "i" ::= ("i" +' 2))
   (
     "a" ::= ("a" +' 1)
-  )
-).
+  ) 
 
-Example test : exists sigma', program -{ env }-> sigma' /\ sigma' "a" = 4.
-Proof.
-  eexists.
-  split.
-  - eapply e_seq; eauto.
-    + eapply e_seq; eauto.
-      * eapply e_seq; eauto.
-        ** eapply e_seq; eauto.
-          *** eapply e_whiletrue; eauto.
-              eapply e_seq; eauto.
-        ** eapply e_fortrue; eauto.
-           eapply e_seq; eauto.
-           eapply e_whiletrue; eauto.
-           eapply e_seq; eauto.
-           *** eapply e_seq; eauto.
-           *** eapply e_whilefalse; eauto.
-  - simpl. unfold update. simpl. reflexivity.
-Qed.
+).
 
